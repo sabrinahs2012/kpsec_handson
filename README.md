@@ -40,10 +40,30 @@
 │   └── app_event_log.csv
 ├── scripts/
 │   └── generate_data.py       # 데이터 생성기 (표준 라이브러리만 사용)
+├── notebooks/                 # Databricks 노트북 (Git folder 에서 바로 실행)
+│   ├── 00_setup_and_upload.py # 스키마/볼륨 생성 + data/*.csv → Volume 복사
+│   ├── 01_load_tables.py      # 테이블 생성·적재 + 행수 검증
+│   └── 02_exercises.py        # 실습 문제 9개
 └── sql/
     ├── 01_create_and_load.sql # 스키마/볼륨 생성 + 테이블 적재 + 검증
     └── 02_exercises.sql       # 실습 문제 9개
 ```
+
+## Databricks 노트북으로 실행 (권장)
+
+Git folder(Repos)에 이 저장소를 연결한 뒤 `notebooks/` 의 노트북을 **번호 순서대로** 실행합니다. CSV 업로드도 노트북이 대신 합니다.
+
+| 순서 | 노트북 | 하는 일 |
+|---|---|---|
+| 1 | `00_setup_and_upload` | `kpsec.sandbox_edu` 스키마·`edu_raw` 볼륨 생성, `data/*.csv` 6개를 Volume 으로 복사 |
+| 2 | `01_load_tables` | 테이블 7개 생성·적재, 마지막에 행수 검증 |
+| 3 | `02_exercises` | 실습 문제 9개 (품질점검 → 조인 → 윈도우 → JSON → 코호트 → 마스킹뷰 → 타임트래블) |
+
+- 사전 조건: 카탈로그 `kpsec` 존재, 실행 계정에 `CREATE SCHEMA` / `CREATE VOLUME` 권한. SQL 웨어하우스 또는 서버리스/클러스터 어디서나 실행 가능
+- `01_load_tables` 는 `CREATE OR REPLACE` 라 재실행해도 안전합니다.
+- 노트북은 `sql/` 의 스크립트를 Databricks 실행에 맞게 옮긴 것입니다. 차이점: 적재를 `CREATE TABLE (컬럼 정의)` → `INSERT INTO ... SELECT` 두 단계로 분리했고, 실습 [5] 는 0 나누기 방지를 위해 `try_divide` 를 사용, 실습 [9] 의 `RESTORE` 버전은 `1` 입니다.
+
+아래 `사용 순서` 는 노트북 없이 수동으로 실행할 때의 절차입니다.
 
 ## 사용 순서
 
