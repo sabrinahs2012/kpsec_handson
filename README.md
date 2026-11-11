@@ -1,93 +1,69 @@
-# from_kakaopay_stock
+# Databricks 교육용 샘플 데이터셋
 
+사내 환경과 유사한 전부 가상의 증권 도메인 데이터. 실제 고객·계좌 정보 없음
+(고객번호 9xxxxxxx, 계좌번호 999-XX-XXXXXX, 이름/전화는 처음부터 마스킹 형태, CI는 가상 해시).
 
+> 출처: 고객사가 제공한 샘플(README / SQL 2종 / 데이터 생성기 / CSV 6종)을 로컬 파일로 복원한 것입니다.
 
-## Getting started
+## 사내 관례 반영
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- 카탈로그 `kpsec`, 스키마 `sandbox_edu` (교육 전용, sandbox 워크스페이스)
+- `base_date` = STRING `yyyymmdd`, 원장성 테이블은 `eis_` 접두사(계정계 원장)
+- 테이블 코멘트 `BIGDATA(DBX)_<소스>_<업무>_<한글명>`, 큰 테이블은 `CLUSTER BY (base_date)`
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 테이블
 
-## Add your files
+| 테이블 | 행수 | 용도 |
+|---|---|---|
+| dim_stock | 5 | 종목 마스터 |
+| stock_price_daily | 10 | 일별 시세, 윈도우 함수 |
+| dim_customer | 10 | 마스킹 컬럼·결측(마케팅동의 1건) |
+| eis_ac_account | 11 | 계좌 원장, 해지/정상 |
+| eis_tr_order | 11 | 주문/체결. 일부러 오염: 중복 1건, 음수 수량 1건, 채널 결측 1건 |
+| app_event_log | 10 | JSON(`props_json`) 반정형, 전환율 |
+| daily_trade_kpi | (파생) | 마트 예시 (중복 제거 후 일별 KPI) |
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+종목코드는 실재 코드와 겹치지 않게 `X` 접두사. CSV 전체 합계 수 KB(1MB 미만, 테이블당 5~11행).
+기간 2026-10-29 ~ 2026-10-30 (2영업일, 해지 계좌 1건 포함). 시드 고정이라 재생성해도 동일.
+
+## 디렉토리 구조
 
 ```
-cd existing_repo
-git remote add origin https://cpeteam.duckdns.org/hshwang/from_kakaopay_stock.git
-git branch -M main
-git push -uf origin main
+.
+├── README.md
+├── data/                      # 생성된 CSV 6종
+│   ├── dim_stock.csv
+│   ├── stock_price_daily.csv
+│   ├── dim_customer.csv
+│   ├── eis_ac_account.csv
+│   ├── eis_tr_order.csv
+│   └── app_event_log.csv
+├── scripts/
+│   └── generate_data.py       # 데이터 생성기 (표준 라이브러리만 사용)
+└── sql/
+    ├── 01_create_and_load.sql # 스키마/볼륨 생성 + 테이블 적재 + 검증
+    └── 02_exercises.sql       # 실습 문제 9개
 ```
 
-## Integrate with your tools
+## 사용 순서
 
-* [Set up project integrations](https://cpeteam.duckdns.org/hshwang/from_kakaopay_stock/-/settings/integrations)
+1. (이미 생성됨) 재생성: `python3 -I scripts/generate_data.py data`
+2. Databricks sandbox 에서 `sql/01_create_and_load.sql` 의 앞부분(스키마·볼륨 생성)만 먼저 실행
+3. `data/*.csv` 6개를 Volume `/Volumes/kpsec/sandbox_edu/edu_raw/` 에 업로드 (UI: Catalog → 볼륨 → Upload)
+4. `01_create_and_load.sql` 나머지 실행 → 마지막 검증 쿼리로 행수 확인
+5. `sql/02_exercises.sql` 로 실습 (품질점검 → 조인 → 윈도우 → JSON → 코호트 → 마스킹뷰 → 타임트래블)
 
-## Collaborate with your team
+## 참고
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+- 권한은 참가자별 스키마 쓰기가 필요하면 `USE`/`SELECT`/`MODIFY` 를 교육 그룹에 부여하거나, 참가자마다 `sandbox_edu_<id>` 스키마로 CTAS 복제.
+- 데이터셋 관련 요청/문의는 카카오페이증권 담당자(메일 발신자)에게 직접 전달.
 
-## Test and Deploy
+## 복원 시 메모 (메일 → 파일)
 
-Use the built-in continuous integration in GitLab.
+메일 본문이 HTML 로 변환되면서 손실된 부분을 아래와 같이 복원했습니다.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- 들여쓰기 손실 → `generate_data.py` 의 Python 들여쓰기, SQL 정렬 재구성
+- `*` 손실 → `COUNT(*)`, `data/*.csv`, 마스킹 값(`신*`, `010-****-1807`) 복원
+- `#` 주석이 제목으로 변환된 부분 → Python/SQL 주석으로 복원
+- 원문 SQL 1 헤더 주석의 Volume 경로 `/Volumes/kpsec/sandbox/edu_raw/` 는 코드 본문(`sandbox_edu`)과 달라 **`sandbox_edu` 로 통일**
+- 검증: 복원한 `generate_data.py` 를 실행해 생성된 CSV 6종이 메일 본문 CSV 와 모두 동일함을 확인

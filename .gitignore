@@ -1,0 +1,8 @@
+# 메일 원본 저장본(HTML + 리소스 폴더)은 GitLab 에 올리지 않음
+Fwd_*.html
+Fwd_*_files/
+
+# OS / Python
+.DS_Store
+__pycache__/
+*.pyc
