@@ -93,7 +93,7 @@ CREATE OR REPLACE TABLE app_event_log (
 ) CLUSTER BY (base_date) COMMENT 'BIGDATA(DBX)_EDU_앱로그_앱이벤트'
 AS SELECT event_id, base_date, CAST(event_ts AS TIMESTAMP), cust_no, event_name, screen, props_json
 FROM read_files('/Volumes/kpsec/sandbox_edu/edu_raw/app_event_log.csv',
-  format => 'csv', header => true,
+  format => 'csv', header => true, escape => '"',
   schema => 'event_id STRING, base_date STRING, event_ts STRING, cust_no STRING, event_name STRING, screen STRING, props_json STRING');
 
 -- ---------------------------------------------------------------- 마트 예시 (실습 정답 겸 KPI 형태)

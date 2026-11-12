@@ -177,7 +177,7 @@
 # MAGIC INSERT INTO app_event_log
 # MAGIC SELECT event_id, base_date, CAST(event_ts AS TIMESTAMP), cust_no, event_name, screen, props_json
 # MAGIC FROM read_files('/Volumes/kpsec/sandbox_edu/edu_raw/app_event_log.csv',
-# MAGIC   format => 'csv', header => true,
+# MAGIC   format => 'csv', header => true, escape => '"',
 # MAGIC   schema => 'event_id STRING, base_date STRING, event_ts STRING, cust_no STRING, event_name STRING, screen STRING, props_json STRING')
 
 # COMMAND ----------
