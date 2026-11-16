@@ -179,4 +179,23 @@ for _ in range(10):
         props["stock_cd"] = random.choices(stocks, weights)[0]["stock_cd"]
     rows.append([f"E{len(rows) + 1:08d}", ymd(d), ts.strftime("%Y-%m-%d %H:%M:%S"), c["cust_no"], ev, scr,
                  json.dumps(props, ensure_ascii=False)])
+
+# 주문 전환율 실습([5])용: order_start -> order_done 퍼널 이벤트 추가.
+# 별도 RNG를 써서 위의 기존 10행과 다른 테이블 값은 그대로 유지한다.
+frng = random.Random(SEED + 5)
+N_FUNNEL = 20  # order_start 건수
+DONE_RATE = {"iOS": 0.75, "Android": 0.4}  # OS별 전환율 차이가 보이도록
+for _ in range(N_FUNNEL):
+    d = frng.choice(bdays)
+    c = frng.choice(custs)
+    os_ = frng.choices(["iOS", "Android"], [0.45, 0.55])[0]
+    props = {"os": os_, "app_ver": frng.choice(["5.1.0", "5.2.0", "5.3.1"]),
+             "stock_cd": frng.choices(stocks, weights)[0]["stock_cd"]}
+    ts = datetime(d.year, d.month, d.day, frng.randint(9, 15), frng.randint(0, 59), frng.randint(0, 59))
+    rows.append([f"E{len(rows) + 1:08d}", ymd(d), ts.strftime("%Y-%m-%d %H:%M:%S"), c["cust_no"],
+                 "order_start", "주문", json.dumps(props, ensure_ascii=False)])
+    if frng.random() < DONE_RATE[os_]:
+        ts2 = ts + timedelta(seconds=frng.randint(5, 180))  # 시작 후 5초~3분 뒤 완료
+        rows.append([f"E{len(rows) + 1:08d}", ymd(d), ts2.strftime("%Y-%m-%d %H:%M:%S"), c["cust_no"],
+                     "order_done", "주문완료", json.dumps(props, ensure_ascii=False)])
 write("app_event_log", ["event_id", "base_date", "event_ts", "cust_no", "event_name", "screen", "props_json"], rows)
