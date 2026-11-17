@@ -205,7 +205,7 @@
 # MAGIC %md
 # MAGIC ## 검증 — 행수 확인
 # MAGIC
-# MAGIC 기대값: `dim_stock` 5 · `stock_price_daily` 10 · `dim_customer` 10 · `eis_ac_account` 11 · `eis_tr_order` 11 · `app_event_log` 10 · `daily_trade_kpi` 2(영업일 수)
+# MAGIC 기대값: `dim_stock` 10 · `stock_price_daily` 20 · `dim_customer` 20 · `eis_ac_account` 22 · `eis_tr_order` 22 · `app_event_log` 79 · `daily_trade_kpi` 2(영업일 수)
 
 # COMMAND ----------
 

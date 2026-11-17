@@ -31,7 +31,7 @@
 # MAGIC %md
 # MAGIC ## [2] 데이터 품질: 주문 테이블 중복 / 음수 수량 / 채널 결측 건수
 # MAGIC
-# MAGIC 기대값: `total` 11, `dup_rows` 1, `bad_qty` 1, `null_channel` 1
+# MAGIC 기대값: `total` 22, `dup_rows` 2, `bad_qty` 2, `null_channel` 2
 
 # COMMAND ----------
 
@@ -75,8 +75,8 @@
 # MAGIC %md
 # MAGIC ## [5] 반정형 JSON: 앱 이벤트에서 OS별 주문 전환율 (order_start → order_done)
 # MAGIC
-# MAGIC > 샘플이 10행뿐이라 `order_start` / `order_done` 이 0건일 수 있습니다. (현재 샘플은 0건)
-# MAGIC > 이 경우 `/` 는 ANSI 모드에서 0 나누기 에러가 나므로 `try_divide` 를 써서 `conv` 를 NULL 로 반환합니다.
+# MAGIC 기대값: Android `starts` 23 · `dones` 7 · `conv` 0.304 / iOS `starts` 19 · `dones` 12 · `conv` 0.632
+# MAGIC > 데이터에 따라 `order_start` 가 0건이면 `/` 는 ANSI 모드에서 0 나누기 에러가 나므로 `try_divide` 를 써서 `conv` 를 NULL 로 반환합니다.
 
 # COMMAND ----------
 

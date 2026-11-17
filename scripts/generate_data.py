@@ -19,6 +19,8 @@ from pathlib import Path
 
 SEED = 20261109
 random.seed(SEED)
+# 2배 확장분 전용 RNG: 기존 행을 만드는 random 시퀀스는 건드리지 않고, 같은 규칙으로 같은 수만큼 행을 덧붙인다.
+xrng = random.Random(SEED + 100)
 OUT = Path(sys.argv[1] if len(sys.argv) > 1 else "../data")
 OUT.mkdir(parents=True, exist_ok=True)
 
@@ -56,8 +58,18 @@ for i in range(N_STOCK):
         "base_px": random.choice([3000, 8000, 15000, 32000, 58000, 91000, 180000, 420000]),
         "list_dt": ymd(date(2005, 1, 1) + timedelta(days=random.randint(0, 6000))),
     })
+stocks_x = []  # 2배 확장분
+for i in range(N_STOCK, N_STOCK * 2):
+    stocks_x.append({
+        "stock_cd": f"X{900000 + i * 37:06d}",
+        "stock_nm": f"샘플종목{i + 1:03d}",
+        "market": xrng.choices(["KOSPI", "KOSDAQ"], [0.6, 0.4])[0],
+        "sector": xrng.choice(SECTORS),
+        "base_px": xrng.choice([3000, 8000, 15000, 32000, 58000, 91000, 180000, 420000]),
+        "list_dt": ymd(date(2005, 1, 1) + timedelta(days=xrng.randint(0, 6000))),
+    })
 write("dim_stock", ["stock_cd", "stock_nm", "market", "sector", "list_dt"],
-      [[s["stock_cd"], s["stock_nm"], s["market"], s["sector"], s["list_dt"]] for s in stocks])
+      [[s["stock_cd"], s["stock_nm"], s["market"], s["sector"], s["list_dt"]] for s in stocks + stocks_x])
 
 # ------------------------------------------------------ stock_price_daily
 prices = {}  # (stock_cd, ymd) -> close
@@ -71,6 +83,18 @@ for s in stocks:
         h = max(o, c) * (1 + abs(random.gauss(0, 0.007)))
         l = min(o, c) * (1 - abs(random.gauss(0, 0.007)))
         vol = int(abs(random.gauss(300000, 150000))) + 1000
+        rows.append([ymd(d), s["stock_cd"], int(o), int(round(h, -1)), int(round(l, -1)), int(c), vol])
+        prices[(s["stock_cd"], ymd(d))] = int(c)
+        px = c
+for s in stocks_x:  # 2배 확장분
+    px = s["base_px"]
+    for d in bdays:
+        chg = xrng.gauss(0.0004, 0.02)
+        o = px
+        c = max(100, round(px * (1 + chg), -1))
+        h = max(o, c) * (1 + abs(xrng.gauss(0, 0.007)))
+        l = min(o, c) * (1 - abs(xrng.gauss(0, 0.007)))
+        vol = int(abs(xrng.gauss(300000, 150000))) + 1000
         rows.append([ymd(d), s["stock_cd"], int(o), int(round(h, -1)), int(round(l, -1)), int(c), vol])
         prices[(s["stock_cd"], ymd(d))] = int(c)
         px = c
@@ -102,6 +126,26 @@ for i in range(N_CUST):
         ymd(join),
         random.choice(["Y", "N"]) if i != 7 else "",  # 마케팅 동의 결측 1건
     ])
+custs_x = []  # 2배 확장분
+for i in range(N_CUST, N_CUST * 2):
+    cno = f"{90000001 + i}"
+    join = date(2018, 1, 1) + timedelta(days=int(xrng.random() ** 0.6 * 3200))
+    age = xrng.choices(["20대", "30대", "40대", "50대", "60대+"], [0.25, 0.32, 0.22, 0.14, 0.07])[0]
+    sido = xrng.choices(["서울", "경기", "부산", "대구", "인천", "기타"], [0.28, 0.27, 0.07, 0.05, 0.06, 0.27])[0]
+    ci = hashlib.sha256(f"edu-{cno}".encode()).hexdigest()[:32]
+    custs_x.append({"cust_no": cno, "join_dt": ymd(join), "age_grp": age})
+    rows.append([
+        cno,
+        xrng.choice(SURN) + "*",
+        f"010-****-{xrng.randint(0, 9999):04d}",
+        ci,
+        age,
+        sido,
+        xrng.choices(CHANNELS, [0.55, 0.15, 0.2, 0.1])[0],
+        xrng.choices(GRADES, [0.85, 0.12, 0.03])[0],
+        ymd(join),
+        xrng.choice(["Y", "N"]) if i != 17 else "",  # 마케팅 동의 결측 1건 (확장분)
+    ])
 write("dim_customer",
       ["cust_no", "cust_nm_mask", "mobile_mask", "ci_hash", "age_grp", "sido", "join_channel", "cust_grade", "join_dt", "mkt_agree_yn"],
       rows)
@@ -128,6 +172,19 @@ for c in custs:
         accts.append({"acct_no": acct_no, "cust_no": c["cust_no"], "open": open_d, "close": close_d})
         rows.append([acct_no, c["cust_no"], tp[0], tp[1], ymd(open_d),
                      ymd(close_d) if close_d else "", "해지" if closed else "정상"])
+accts_x = []  # 2배 확장분: 기존과 같은 11개가 되도록 고객 1명만 계좌 2개
+two_acct = xrng.choice(custs_x)["cust_no"]
+for c in custs_x:
+    for _ in range(2 if c["cust_no"] == two_acct else 1):
+        seq += xrng.randint(1, 9)
+        tp = xrng.choices(ACCT_TYPES, [0.6, 0.12, 0.12, 0.04, 0.12])[0]
+        jd = datetime.strptime(c["join_dt"], "%Y%m%d").date()
+        open_d = jd + timedelta(days=xrng.randint(0, 400))
+        if open_d > END:
+            open_d = END - timedelta(days=xrng.randint(0, 30))
+        acct_no = f"999-{xrng.randint(10, 99)}-{seq:06d}"
+        accts_x.append({"acct_no": acct_no, "cust_no": c["cust_no"], "open": open_d, "close": None})
+        rows.append([acct_no, c["cust_no"], tp[0], tp[1], ymd(open_d), "", "정상"])
 write("eis_ac_account", ["acct_no", "cust_no", "acct_type_cd", "acct_type_nm", "open_dt", "close_dt", "acct_stat"], rows)
 
 # --------------------------------------------------------------- eis_tr_order
@@ -160,6 +217,33 @@ rows.append(list(rows[0]))  # 중복 1건
 rows[1][6] = -abs(int(rows[1][6]))  # 음수 수량 1건
 rows[2][9] = ""  # 채널 결측 1건
 random.shuffle(rows)
+# 2배 확장분: 주문 10건 + 같은 비율의 오염(중복 1, 음수 수량 1, 채널 결측 1)
+all_accts, all_stocks = accts + accts_x, stocks + stocks_x
+weights_x = [1 / (i + 1) ** 0.8 for i in range(len(all_stocks))]
+xrows = []
+while len(xrows) < N_ORD:
+    d = xrng.choices(bdays, day_w)[0]
+    a = xrng.choice(all_accts)
+    if a["open"] > d or (a["close"] and a["close"] < d):
+        continue
+    s = xrng.choices(all_stocks, weights_x)[0]
+    close = prices[(s["stock_cd"], ymd(d))]
+    qty = xrng.choice([1, 2, 3, 5, 10, 20, 50, 100, 300])
+    px = max(100, int(round(close * (1 + xrng.gauss(0, 0.004)), -1)))
+    oid += 1
+    status = xrng.choices(["체결", "미체결", "취소"], [0.9, 0.04, 0.06])[0]
+    ts = datetime(d.year, d.month, d.day, 9, 0) + timedelta(seconds=xrng.randint(0, 6 * 3600 + 1800))
+    xrows.append([
+        f"O{ymd(d)}{oid:07d}", ymd(d), ts.strftime("%Y-%m-%d %H:%M:%S"), a["acct_no"], s["stock_cd"],
+        xrng.choices(["매수", "매도"], [0.55, 0.45])[0], qty, px, qty * px if status == "체결" else 0,
+        xrng.choices(["MTS", "HTS", "ARS", "API"], [0.72, 0.2, 0.01, 0.07])[0],
+        status,
+    ])
+xrows.append(list(xrows[0]))  # 중복 1건
+xrows[1][6] = -abs(int(xrows[1][6]))  # 음수 수량 1건
+xrows[2][9] = ""  # 채널 결측 1건
+xrng.shuffle(xrows)
+rows += xrows
 write("eis_tr_order",
       ["order_id", "base_date", "order_ts", "acct_no", "stock_cd", "side", "qty", "order_px", "exec_amt", "channel", "order_stat"],
       rows)
@@ -196,6 +280,31 @@ for _ in range(N_FUNNEL):
                  "order_start", "주문", json.dumps(props, ensure_ascii=False)])
     if frng.random() < DONE_RATE[os_]:
         ts2 = ts + timedelta(seconds=frng.randint(5, 180))  # 시작 후 5초~3분 뒤 완료
+        rows.append([f"E{len(rows) + 1:08d}", ymd(d), ts2.strftime("%Y-%m-%d %H:%M:%S"), c["cust_no"],
+                     "order_done", "주문완료", json.dumps(props, ensure_ascii=False)])
+# 2배 확장분: 일반 이벤트 10건 + 퍼널 order_start 20건(전환율 규칙 동일), 신규 고객·종목 포함
+all_custs = custs + custs_x
+for _ in range(10):
+    d = xrng.choice(bdays)
+    c = xrng.choice(all_custs)
+    ev, scr = xrng.choices(EVENTS, [30, 28, 14, 10, 6, 8, 3, 1])[0]
+    ts = datetime(d.year, d.month, d.day, xrng.randint(7, 23), xrng.randint(0, 59), xrng.randint(0, 59))
+    props = {"os": xrng.choices(["iOS", "Android"], [0.45, 0.55])[0], "app_ver": xrng.choice(["5.1.0", "5.2.0", "5.3.1"])}
+    if ev in ("view_stock", "order_start", "order_done"):
+        props["stock_cd"] = xrng.choices(all_stocks, weights_x)[0]["stock_cd"]
+    rows.append([f"E{len(rows) + 1:08d}", ymd(d), ts.strftime("%Y-%m-%d %H:%M:%S"), c["cust_no"], ev, scr,
+                 json.dumps(props, ensure_ascii=False)])
+for _ in range(N_FUNNEL):
+    d = xrng.choice(bdays)
+    c = xrng.choice(all_custs)
+    os_ = xrng.choices(["iOS", "Android"], [0.45, 0.55])[0]
+    props = {"os": os_, "app_ver": xrng.choice(["5.1.0", "5.2.0", "5.3.1"]),
+             "stock_cd": xrng.choices(all_stocks, weights_x)[0]["stock_cd"]}
+    ts = datetime(d.year, d.month, d.day, xrng.randint(9, 15), xrng.randint(0, 59), xrng.randint(0, 59))
+    rows.append([f"E{len(rows) + 1:08d}", ymd(d), ts.strftime("%Y-%m-%d %H:%M:%S"), c["cust_no"],
+                 "order_start", "주문", json.dumps(props, ensure_ascii=False)])
+    if xrng.random() < DONE_RATE[os_]:
+        ts2 = ts + timedelta(seconds=xrng.randint(5, 180))
         rows.append([f"E{len(rows) + 1:08d}", ymd(d), ts2.strftime("%Y-%m-%d %H:%M:%S"), c["cust_no"],
                      "order_done", "주문완료", json.dumps(props, ensure_ascii=False)])
 write("app_event_log", ["event_id", "base_date", "event_ts", "cust_no", "event_name", "screen", "props_json"], rows)
