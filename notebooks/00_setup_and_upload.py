@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # 00. 환경 준비 + CSV 업로드
 # MAGIC
-# MAGIC README `사용 순서` 의 **2~3단계**를 수행합니다.
+# MAGIC README `사용 순서` 의 **1~2단계**를 수행합니다.
 # MAGIC
 # MAGIC 1. 스키마 `kpsec.sandbox_edu` / 볼륨 `edu_raw` 생성
 # MAGIC 2. Git folder 의 `data/*.csv` 6개를 Volume `/Volumes/kpsec/sandbox_edu/edu_raw/` 로 복사
