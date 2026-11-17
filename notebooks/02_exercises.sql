@@ -132,7 +132,8 @@ SELECT * FROM v_customer_safe
 -- MAGIC %md
 -- MAGIC ## [9] Delta 기능: 타임트래블 / 최적화 (잘못 지운 뒤 복구 시연)
 -- MAGIC
--- MAGIC 시연 순서: ① 취소 건 삭제 → ② 이력 확인 → ③ 이전 버전으로 복구.
+-- MAGIC 시연 순서: ① 미체결 건 삭제 → ② 이력 확인 → ③ 이전 버전으로 복구.
+-- MAGIC 기대값: 미체결 3건 삭제 → 22건이 19건으로 줄고, 복구하면 다시 22건.
 -- MAGIC 데이터가 바뀌므로 **기본은 주석 처리**되어 있습니다. 시연할 때만 `--` 를 지우고 한 셀씩 실행하세요.
 -- MAGIC
 -- MAGIC `01_load_tables` 는 `CREATE`(버전 0, 빈 테이블) → `INSERT`(버전 1, 데이터 적재) 순서라서
@@ -142,7 +143,7 @@ SELECT * FROM v_customer_safe
 
 -- COMMAND ----------
 
--- DELETE FROM eis_tr_order WHERE order_stat = '취소'
+-- DELETE FROM eis_tr_order WHERE order_stat = '미체결'
 
 -- COMMAND ----------
 

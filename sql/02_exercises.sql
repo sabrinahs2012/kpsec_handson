@@ -55,7 +55,7 @@ FROM dim_customer;
 -- GRANT SELECT ON VIEW v_customer_safe TO `account users`;
 
 -- [9] Delta 기능: 타임트래블 / 최적화 (잘못 지운 뒤 복구 시연)
--- DELETE FROM eis_tr_order WHERE order_stat = '취소';
+-- DELETE FROM eis_tr_order WHERE order_stat = '미체결';
 -- DESCRIBE HISTORY eis_tr_order;
 -- RESTORE TABLE eis_tr_order TO VERSION AS OF 0;
 OPTIMIZE eis_tr_order;
