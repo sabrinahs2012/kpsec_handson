@@ -1,13 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 00. 환경 준비 + CSV 업로드
+# MAGIC # 00. 사전 준비 (관리자 · 강사용) — 공통 스키마 · 볼륨 + CSV 업로드
 # MAGIC
-# MAGIC README `사용 순서` 의 **1~2단계**를 수행합니다.
+# MAGIC > **교육생은 이 노트북을 실행하지 않습니다.** 교육 전에 관리자(고객사) 또는 강사가 한 번만 실행합니다.
+# MAGIC > 교육생은 `01_load_tables` 부터 시작해, 이 볼륨의 CSV로 **본인 이름이 붙은 테이블** (`dim_stock_<my_id>` …)을 만듭니다.
 # MAGIC
-# MAGIC 1. 스키마 `kpsec.sandbox_edu` / 볼륨 `edu_raw` 생성
+# MAGIC 1. 공통 스키마 `kpsec.sandbox_edu` / 볼륨 `edu_raw` 생성
 # MAGIC 2. Git folder 의 `data/*.csv` 6개를 Volume `/Volumes/kpsec/sandbox_edu/edu_raw/` 로 복사
+# MAGIC 3. (권한) 교육생 그룹에 스키마 사용 · 테이블 생성 · 볼륨 읽기 권한 부여 — 아래 GRANT 예시 참고
 # MAGIC
-# MAGIC **실행 순서**: `00_setup_and_upload` → `01_load_tables` → `02_exercises`
+# MAGIC **실행 순서**: (사전 준비) `00_setup_and_upload` → (교육생) `01_load_tables` → `02_exercises`
 # MAGIC
 # MAGIC > 사전 조건: 카탈로그 `kpsec` 가 있고, 실행 계정에 `CREATE SCHEMA` / `CREATE VOLUME` 권한이 있어야 합니다. (sandbox 워크스페이스)
 
@@ -82,4 +84,17 @@ display(dbutils.fs.ls("/Volumes/kpsec/sandbox_edu/edu_raw/"))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 다음: `01_load_tables` 노트북을 실행하세요.
+# MAGIC ## 4. (선택) 교육생 권한 부여 예시
+# MAGIC
+# MAGIC 교육생 그룹 이름(예: `dbx_edu_users`)에 맞게 바꿔서 SQL 셀에서 실행하세요. 관리자 · 스키마 소유자만 실행할 수 있습니다.
+# MAGIC
+# MAGIC ```sql
+# MAGIC GRANT USE CATALOG ON CATALOG kpsec TO `dbx_edu_users`;
+# MAGIC GRANT USE SCHEMA, CREATE TABLE ON SCHEMA kpsec.sandbox_edu TO `dbx_edu_users`;
+# MAGIC GRANT READ VOLUME ON VOLUME kpsec.sandbox_edu.edu_raw TO `dbx_edu_users`;
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC 사전 준비 끝. 교육생은 `01_load_tables` 노트북부터 실행합니다.
