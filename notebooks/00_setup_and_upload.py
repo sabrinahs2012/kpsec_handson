@@ -3,7 +3,9 @@
 # MAGIC # 00. 사전 준비 (관리자 · 강사용) — 공통 스키마 · 볼륨 + 실습 파일 업로드
 # MAGIC
 # MAGIC > **교육생은 이 노트북을 실행하지 않습니다.** 교육 전에 관리자(고객사) 또는 강사가 한 번만 실행합니다.
-# MAGIC > 교육생은 `01_load_tables` 부터 시작해, 이 볼륨의 CSV로 **본인 이름이 붙은 테이블** (`dim_stock_<my_id>` …)을 만듭니다.
+# MAGIC > 교육생은 `01_load_tables` 부터 시작해, 공유 폴더 `/Workspace/Shared/kpsec_handson/data` 의 CSV로 **본인 이름이 붙은 테이블** (`dim_stock_<my_id>` …)을 만듭니다.
+# MAGIC > 공유 폴더는 이 저장소를 `/Workspace/Shared/kpsec_handson` 에 Git folder 로 연결해 두면 됩니다. 교육생에게 이 폴더 읽기 권한(Can Read)이 있어야 합니다.
+# MAGIC > 볼륨 복사는 SQL Editor 실행(`sql/` 스크립트)과 대시보드 템플릿 다운로드용입니다.
 # MAGIC
 # MAGIC 1. 공통 스키마 `kpsec.sandbox_edu` / 볼륨 `edu_raw` 생성
 # MAGIC 2. Git folder 의 `data/` 파일 7개(CSV 6개 + 대시보드 템플릿 `edu_trade_kpi.lvdash.json`)를 Volume `/Volumes/kpsec/sandbox_edu/edu_raw/` 로 복사

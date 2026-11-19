@@ -2,6 +2,8 @@
 -- notebooks/01_load_tables.sql 과 같은 내용입니다.
 --
 -- [사전 준비 · 관리자] 공통 스키마 · 볼륨 생성 후 data/*.csv 6개를 볼륨에 업로드 (README 참고)
+-- 노트북(01_load_tables)은 공유 폴더 /Workspace/Shared/kpsec_handson/data 를 읽지만,
+-- SQL Warehouse 는 /Workspace 파일을 읽지 못하므로 이 스크립트는 볼륨을 읽습니다.
 --   CREATE SCHEMA IF NOT EXISTS kpsec.sandbox_edu COMMENT '데이터브릭스 교육용 가상 데이터 (실데이터 아님)';
 --   CREATE VOLUME IF NOT EXISTS kpsec.sandbox_edu.edu_raw COMMENT '교육용 CSV 원본';
 --

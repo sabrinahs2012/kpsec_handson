@@ -2,13 +2,13 @@
 -- MAGIC %md
 -- MAGIC # 01. 내 테이블 생성 + 적재
 -- MAGIC
--- MAGIC **교육생은 이 노트북부터 시작합니다.** 공통 스키마 `kpsec.sandbox_edu` 와 볼륨 `edu_raw`(CSV 6개)는 미리 준비되어 있습니다.
+-- MAGIC **교육생은 이 노트북부터 시작합니다.** 공통 스키마 `kpsec.sandbox_edu` 는 미리 준비되어 있고, 원본 CSV 6개는 공유 폴더 `/Workspace/Shared/kpsec_handson/data` 에 있습니다.
 -- MAGIC
 -- MAGIC **`my_id` 설정 (처음 한 번)**
 -- MAGIC
 -- MAGIC 1. **Run all** 을 누릅니다. 첫 셀 `CREATE WIDGET` 이 입력 칸 `my_id` 를 만들고("Parameter created" 알림), ID가 비어 있으므로 **검사 셀에서 멈춥니다** (정상).
 -- MAGIC 2. 노트북 **왼쪽 세로 메뉴의 `{ }` 아이콘(Parameters)** 을 눌러 패널을 열고, `my_id` 칸에 본인 ID를 입력합니다. (영문 소문자 · 숫자 · `_` 만, 예: `rian_bow`)
--- MAGIC 3. 다시 **Run all** — 볼륨의 CSV를 읽어 `dim_stock_<my_id>` 처럼 **본인 이름이 붙은 테이블 7개** 를 만들고, 검증 쿼리 · **앱 이벤트 보정 INSERT** 까지 실행합니다.
+-- MAGIC 3. 다시 **Run all** — 공유 폴더의 CSV 파일이 있는지 확인한 뒤, CSV를 읽어 `dim_stock_<my_id>` 처럼 **본인 이름이 붙은 테이블 7개** 를 만들고, 검증 쿼리 · **앱 이벤트 보정 INSERT** 까지 실행합니다.
 -- MAGIC
 -- MAGIC - 테이블 이름은 `IDENTIFIER('dim_stock_' || :my_id)` 형태로 위젯 값을 붙여 만듭니다.
 -- MAGIC - 사내 관례: `base_date` = STRING `yyyymmdd`, 원장성 테이블은 `eis_` 접두사, 코멘트 = `BIGDATA(DBX)_<소스>_<업무>_<한글명>`
@@ -36,6 +36,40 @@ USE kpsec.sandbox_edu
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC ## 공유 폴더의 CSV 파일 확인
+-- MAGIC
+-- MAGIC 테이블을 만들기 전에 `/Workspace/Shared/kpsec_handson/data` 에 CSV 6개가 있는지 조회합니다.
+-- MAGIC 여러 사람이 같은 파일을 동시에 **읽기만** 하므로 함께 실행해도 문제없습니다.
+-- MAGIC
+-- MAGIC 기대값 (`rows` = 헤더 제외 행 수): `app_event_log` 79 · `dim_customer` 20 · `dim_stock` 10 · `eis_ac_account` 22 · `eis_tr_order` 22 · `stock_price_daily` 20
+
+-- COMMAND ----------
+
+SELECT _metadata.file_name          AS file_name,
+       MAX(_metadata.file_size)     AS file_size_bytes,
+       COUNT(*) - 1                 AS rows,
+       MAX(_metadata.file_modification_time) AS modified_at
+FROM read_files('file:/Workspace/Shared/kpsec_handson/data/*.csv', format => 'text')
+GROUP BY 1
+ORDER BY 1
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC 6개가 모두 없으면 여기서 멈춥니다. 강사에게 공유 폴더 상태(Git folder Pull 여부)와 읽기 권한을 확인해 달라고 하세요.
+
+-- COMMAND ----------
+
+SELECT assert_true(COUNT(DISTINCT _metadata.file_name) = 6,
+                   '/Workspace/Shared/kpsec_handson/data 에 CSV 6개가 없습니다. 강사에게 확인하세요') AS files_ok,
+       COUNT(DISTINCT _metadata.file_name) AS csv_files
+FROM read_files('file:/Workspace/Shared/kpsec_handson/data/*.csv', format => 'text')
+WHERE _metadata.file_name IN ('dim_stock.csv', 'stock_price_daily.csv', 'dim_customer.csv',
+                              'eis_ac_account.csv', 'eis_tr_order.csv', 'app_event_log.csv')
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC ## 종목 마스터 `dim_stock_<my_id>`
 
 -- COMMAND ----------
@@ -51,7 +85,7 @@ CREATE OR REPLACE TABLE IDENTIFIER('dim_stock_' || :my_id) (
 -- COMMAND ----------
 
 INSERT INTO IDENTIFIER('dim_stock_' || :my_id)
-SELECT * FROM read_files('/Volumes/kpsec/sandbox_edu/edu_raw/dim_stock.csv',
+SELECT * FROM read_files('file:/Workspace/Shared/kpsec_handson/data/dim_stock.csv',
   format => 'csv', header => true,
   schema => 'stock_cd STRING, stock_nm STRING, market STRING, sector STRING, list_dt STRING')
 
@@ -75,7 +109,7 @@ CREATE OR REPLACE TABLE IDENTIFIER('stock_price_daily_' || :my_id) (
 -- COMMAND ----------
 
 INSERT INTO IDENTIFIER('stock_price_daily_' || :my_id)
-SELECT * FROM read_files('/Volumes/kpsec/sandbox_edu/edu_raw/stock_price_daily.csv',
+SELECT * FROM read_files('file:/Workspace/Shared/kpsec_handson/data/stock_price_daily.csv',
   format => 'csv', header => true,
   schema => 'base_date STRING, stock_cd STRING, open_px BIGINT, high_px BIGINT, low_px BIGINT, close_px BIGINT, volume BIGINT')
 
@@ -102,7 +136,7 @@ CREATE OR REPLACE TABLE IDENTIFIER('dim_customer_' || :my_id) (
 -- COMMAND ----------
 
 INSERT INTO IDENTIFIER('dim_customer_' || :my_id)
-SELECT * FROM read_files('/Volumes/kpsec/sandbox_edu/edu_raw/dim_customer.csv',
+SELECT * FROM read_files('file:/Workspace/Shared/kpsec_handson/data/dim_customer.csv',
   format => 'csv', header => true,
   schema => 'cust_no STRING, cust_nm_mask STRING, mobile_mask STRING, ci_hash STRING, age_grp STRING, sido STRING, join_channel STRING, cust_grade STRING, join_dt STRING, mkt_agree_yn STRING')
 
@@ -127,7 +161,7 @@ CREATE OR REPLACE TABLE IDENTIFIER('eis_ac_account_' || :my_id) (
 
 INSERT INTO IDENTIFIER('eis_ac_account_' || :my_id)
 SELECT acct_no, cust_no, acct_type_cd, acct_type_nm, open_dt, NULLIF(close_dt, ''), acct_stat
-FROM read_files('/Volumes/kpsec/sandbox_edu/edu_raw/eis_ac_account.csv',
+FROM read_files('file:/Workspace/Shared/kpsec_handson/data/eis_ac_account.csv',
   format => 'csv', header => true,
   schema => 'acct_no STRING, cust_no STRING, acct_type_cd STRING, acct_type_nm STRING, open_dt STRING, close_dt STRING, acct_stat STRING')
 
@@ -156,7 +190,7 @@ CREATE OR REPLACE TABLE IDENTIFIER('eis_tr_order_' || :my_id) (
 
 INSERT INTO IDENTIFIER('eis_tr_order_' || :my_id)
 SELECT order_id, base_date, CAST(order_ts AS TIMESTAMP), acct_no, stock_cd, side, qty, order_px, exec_amt, NULLIF(channel, ''), order_stat
-FROM read_files('/Volumes/kpsec/sandbox_edu/edu_raw/eis_tr_order.csv',
+FROM read_files('file:/Workspace/Shared/kpsec_handson/data/eis_tr_order.csv',
   format => 'csv', header => true,
   schema => 'order_id STRING, base_date STRING, order_ts STRING, acct_no STRING, stock_cd STRING, side STRING, qty INT, order_px BIGINT, exec_amt BIGINT, channel STRING, order_stat STRING')
 
@@ -181,7 +215,7 @@ CREATE OR REPLACE TABLE IDENTIFIER('app_event_log_' || :my_id) (
 
 INSERT INTO IDENTIFIER('app_event_log_' || :my_id)
 SELECT event_id, base_date, CAST(event_ts AS TIMESTAMP), cust_no, event_name, screen, props_json
-FROM read_files('/Volumes/kpsec/sandbox_edu/edu_raw/app_event_log.csv',
+FROM read_files('file:/Workspace/Shared/kpsec_handson/data/app_event_log.csv',
   format => 'csv', header => true, escape => '"',
   schema => 'event_id STRING, base_date STRING, event_ts STRING, cust_no STRING, event_name STRING, screen STRING, props_json STRING')
 
