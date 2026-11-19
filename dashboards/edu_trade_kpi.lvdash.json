@@ -1,0 +1,420 @@
+{
+  "datasets": [
+    {
+      "name": "a1dc3533",
+      "displayName": "채널별 체결",
+      "queryLines": [
+        "SELECT COALESCE(channel, '미상') AS channel, COUNT(*) AS exec_cnt, SUM(exec_amt) AS exec_amt FROM (SELECT DISTINCT * FROM kpsec.sandbox_edu.eis_tr_order_<my_id> WHERE qty > 0 AND order_stat = '체결') GROUP BY 1"
+      ]
+    },
+    {
+      "name": "9f31b7e9",
+      "displayName": "일별 거래 KPI",
+      "queryLines": [
+        "SELECT base_date, trade_acct_cnt, exec_cnt, exec_amt FROM kpsec.sandbox_edu.daily_trade_kpi_<my_id> ORDER BY base_date"
+      ]
+    },
+    {
+      "name": "f0e93404",
+      "displayName": "주문 데이터 품질",
+      "queryLines": [
+        "SELECT COUNT(*) AS total, COUNT(*) - COUNT(DISTINCT order_id) AS dup_rows, SUM(CASE WHEN qty <= 0 THEN 1 END) AS bad_qty, SUM(CASE WHEN channel IS NULL THEN 1 END) AS null_channel FROM kpsec.sandbox_edu.eis_tr_order_<my_id>"
+      ]
+    },
+    {
+      "name": "0ff4b1c6",
+      "displayName": "계좌유형별 체결금액",
+      "queryLines": [
+        "SELECT a.acct_type_nm, SUBSTR(o.base_date, 1, 6) AS ym, SUM(o.exec_amt) AS amt FROM (SELECT DISTINCT * FROM kpsec.sandbox_edu.eis_tr_order_<my_id> WHERE qty > 0 AND order_stat = '체결') o JOIN kpsec.sandbox_edu.eis_ac_account_<my_id> a USING (acct_no) WHERE a.acct_stat = '정상' GROUP BY 1, 2 ORDER BY 2, 1"
+      ]
+    },
+    {
+      "name": "043be6c0",
+      "displayName": "종목별 최근 종가",
+      "queryLines": [
+        "SELECT s.stock_nm, p.base_date, p.close_px FROM kpsec.sandbox_edu.stock_price_daily_<my_id> p JOIN kpsec.sandbox_edu.dim_stock_<my_id> s USING (stock_cd) WHERE p.base_date = (SELECT MAX(base_date) FROM kpsec.sandbox_edu.stock_price_daily_<my_id>) ORDER BY p.close_px DESC LIMIT 10"
+      ]
+    },
+    {
+      "name": "ac7a0045",
+      "displayName": "월별 신규 계좌",
+      "queryLines": [
+        "SELECT SUBSTR(open_dt, 1, 6) AS ym, COUNT(*) AS new_accts FROM kpsec.sandbox_edu.eis_ac_account_<my_id> GROUP BY 1 ORDER BY 1"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "d041ca80",
+      "displayName": "거래 KPI",
+      "layout": [
+        {
+          "widget": {
+            "name": "chaenyeolbyeol-chegyeolgeumaeg",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a1dc3533",
+                  "fields": [
+                    {
+                      "name": "channel",
+                      "expression": "`channel`"
+                    },
+                    {
+                      "name": "sum(exec_amt)",
+                      "expression": "SUM(`exec_amt`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "채널별 체결금액",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "channel",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(exec_amt)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ilbyeol-chegyeol-geumaeg",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9f31b7e9",
+                  "fields": [
+                    {
+                      "name": "base_date",
+                      "expression": "`base_date`"
+                    },
+                    {
+                      "name": "sum(exec_amt)",
+                      "expression": "SUM(`exec_amt`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "일별 체결금액",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "base_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(exec_amt)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "gyojayuhyeongbyeol-chegyeolgeumaeg",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "0ff4b1c6",
+                  "fields": [
+                    {
+                      "name": "acct_type_nm",
+                      "expression": "`acct_type_nm`"
+                    },
+                    {
+                      "name": "sum(amt)",
+                      "expression": "SUM(`amt`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "계좌유형별 체결금액",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "acct_type_nm",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(amt)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 8,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "jongmokbyeol-choegeun-jongga",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "043be6c0",
+                  "fields": [
+                    {
+                      "name": "stock_nm",
+                      "expression": "`stock_nm`"
+                    },
+                    {
+                      "name": "sum(close_px)",
+                      "expression": "SUM(`close_px`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "종목별 최근 종가",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "stock_nm",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(close_px)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 6,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "wolbyeol-sin-gyu-gyeong-chae",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ac7a0045",
+                  "fields": [
+                    {
+                      "name": "ym",
+                      "expression": "`ym`"
+                    },
+                    {
+                      "name": "sum(new_accts)",
+                      "expression": "SUM(`new_accts`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "월별 신규 계좌",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "ym",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(new_accts)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 5,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "jumun-data-pumjil-jeomgeom",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f0e93404",
+                  "fields": [
+                    {
+                      "name": "total",
+                      "expression": "`total`"
+                    },
+                    {
+                      "name": "dup_rows",
+                      "expression": "`dup_rows`"
+                    },
+                    {
+                      "name": "bad_qty",
+                      "expression": "`bad_qty`"
+                    },
+                    {
+                      "name": "null_channel",
+                      "expression": "`null_channel`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "주문 데이터 품질 점검",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "total"
+                  },
+                  {
+                    "fieldName": "dup_rows"
+                  },
+                  {
+                    "fieldName": "bad_qty"
+                  },
+                  {
+                    "fieldName": "null_channel"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 10,
+            "width": 4,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}

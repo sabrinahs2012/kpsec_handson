@@ -1,10 +1,10 @@
 -- 교육 실습 문제 (난이도 순, SQL Editor 실행용). notebooks/02_exercises.sql 과 같은 내용입니다.
--- 에디터 위쪽 파라미터 칸 my_id 에 01 과 같은 본인 ID 를 입력하세요.
+-- 에디터 왼쪽 { } 아이콘(Parameters) 패널의 my_id 에 01 과 같은 본인 ID 를 입력하세요.
 
 
 -- ------------------------------------------------------------ 02. 실습 문제
 SELECT assert_true(:my_id RLIKE '^[a-z][a-z0-9_]*$',
-                   'my_id 위젯(파라미터)에 01_load_tables 와 같은 ID를 입력하세요 (예: rian_bow)') AS id_ok,
+                   '왼쪽 { } 아이콘 → Parameters 패널 my_id 에 01_load_tables 와 같은 ID를 입력하세요 (예: rian_bow)') AS id_ok,
        :my_id AS my_id;
 USE kpsec.sandbox_edu;
 

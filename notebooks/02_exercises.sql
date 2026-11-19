@@ -5,7 +5,7 @@
 -- MAGIC 품질점검 → 조인 → 윈도우 → JSON → 코호트 → 마스킹뷰 → 타임트래블 순서로 난이도가 올라갑니다.
 -- MAGIC
 -- MAGIC - 사전 조건: `01_load_tables` 실행 완료 (본인 테이블 7개)
--- MAGIC - 위쪽 위젯 **`my_id`** 에 `01_load_tables` 와 **같은 ID** 를 입력하세요. 모든 쿼리가 `IDENTIFIER('<테이블>_' || :my_id)` 로 본인 테이블을 읽습니다.
+-- MAGIC - 왼쪽 `{ }` 아이콘(Parameters) 패널의 **`my_id`** 에 `01_load_tables` 와 **같은 ID** 를 입력하세요. (칸이 없으면 Run all 한 번 → 검사 셀에서 멈춘 뒤 입력) 모든 쿼리가 `IDENTIFIER('<테이블>_' || :my_id)` 로 본인 테이블을 읽습니다.
 -- MAGIC - 각 문제의 쿼리는 **힌트/정답** 입니다. 교육 시에는 쿼리를 가리고 풀어보게 하세요.
 
 -- COMMAND ----------
@@ -15,7 +15,7 @@ CREATE WIDGET TEXT my_id DEFAULT ''
 -- COMMAND ----------
 
 SELECT assert_true(:my_id RLIKE '^[a-z][a-z0-9_]*$',
-                   'my_id 위젯(파라미터)에 01_load_tables 와 같은 ID를 입력하세요 (예: rian_bow)') AS id_ok,
+                   '왼쪽 { } 아이콘 → Parameters 패널 my_id 에 01_load_tables 와 같은 ID를 입력하세요 (예: rian_bow)') AS id_ok,
        :my_id AS my_id
 
 -- COMMAND ----------

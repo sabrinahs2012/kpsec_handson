@@ -41,9 +41,11 @@
 │   ├── 00_setup_and_upload.py # [사전 준비·관리자] 공통 스키마/볼륨 생성 + data/*.csv → Volume 복사
 │   ├── 01_load_tables.sql     # [교육생] 본인 테이블(_<my_id>) 생성·적재 + 행수 검증 + 앱 이벤트 보정 INSERT
 │   └── 02_exercises.sql       # 실습 문제 9개
-└── sql/
-    ├── 01_create_and_load.sql # 01 노트북과 같은 내용 (SQL Editor 용, :my_id 파라미터)
-    └── 02_exercises.sql       # 실습 문제 9개
+├── sql/
+│   ├── 01_create_and_load.sql # 01 노트북과 같은 내용 (SQL Editor 용, :my_id 파라미터)
+│   └── 02_exercises.sql       # 실습 문제 9개
+└── dashboards/
+    └── edu_trade_kpi.lvdash.json # 대시보드 템플릿 (테이블 이름에 <my_id> 자리 표시, 위젯 6개)
 ```
 
 ## 실행 방법
@@ -53,10 +55,10 @@
 | 누가 | 노트북 | 하는 일 |
 |---|---|---|
 | 관리자 · 강사 (교육 전 1회) | `00_setup_and_upload` | 공통 스키마 `kpsec.sandbox_edu` · 볼륨 `edu_raw` 생성, `data/*.csv` 6개를 볼륨으로 복사, 교육생 권한 부여(GRANT 예시) |
-| 교육생 | `01_load_tables` | 위젯 `my_id` 에 본인 ID 입력 → 볼륨 CSV 를 읽어 `dim_stock_<my_id>` 등 본인 테이블 7개 생성 · 검증 → 앱 이벤트 보정 INSERT |
+| 교육생 | `01_load_tables` | Run all → 검사 셀에서 멈추면 왼쪽 `{ }` 아이콘(Parameters) 패널 `my_id` 에 본인 ID 입력 → 다시 Run all → 볼륨 CSV 를 읽어 `dim_stock_<my_id>` 등 본인 테이블 7개 생성 · 검증 → 앱 이벤트 보정 INSERT |
 | 교육생 | `02_exercises` | 같은 `my_id` 로 실습 문제 9개 (품질점검 → 조인 → 윈도우 → JSON → 코호트 → 마스킹뷰 → 타임트래블) |
 
-- 테이블 이름은 `IDENTIFIER('dim_stock_' || :my_id)` 처럼 위젯 값을 붙여 만듭니다. SQL Editor 에서는 같은 `:my_id` 가 파라미터 칸으로 나타납니다 (`sql/` 스크립트).
+- 테이블 이름은 `IDENTIFIER('dim_stock_' || :my_id)` 처럼 위젯 값을 붙여 만듭니다. `CREATE WIDGET` 셀이 실행돼야 입력 칸이 생기고, 칸은 노트북 왼쪽 `{ }` 아이콘의 **Parameters 패널**에 있습니다. SQL Editor 에서도 같은 `:my_id` 가 왼쪽 Parameters 패널에 나타납니다 (`sql/` 스크립트).
 - `my_id` 는 영문 소문자 · 숫자 · `_` 만 (예: `rian_bow`). 비어 있으면 첫 검사 셀에서 멈춥니다.
 - 교육생 권한: `USE CATALOG kpsec`, `USE SCHEMA` · `CREATE TABLE` (스키마 `sandbox_edu`), `READ VOLUME` (볼륨 `edu_raw`).
 - `01_load_tables` 는 `CREATE OR REPLACE` 라 재실행해도 안전하고, 보정 INSERT 는 이미 있는 `event_id` 는 건너뜁니다.
@@ -65,7 +67,15 @@
 ### 노트북 없이 (SQL Editor) 실행할 때
 
 1. (관리자) 스키마 · 볼륨 생성 후 `data/*.csv` 6개를 `/Volumes/kpsec/sandbox_edu/edu_raw/` 에 업로드 (UI: Catalog → 볼륨 → Upload)
-2. (교육생) `sql/01_create_and_load.sql` 실행 — 파라미터 `my_id` 입력 → 검증 쿼리로 행수 확인
+2. (교육생) `sql/01_create_and_load.sql` 실행 — 왼쪽 `{ }` Parameters 패널의 `my_id` 입력 → 검증 쿼리로 행수 확인
 3. (교육생) `sql/02_exercises.sql` 로 실습
+
+### 대시보드 템플릿 가져오기 (JSON Import)
+
+1. `dashboards/edu_trade_kpi.lvdash.json` 을 내려받아 텍스트 편집기에서 `<my_id>` 를 본인 ID로 모두 바꿉니다 (9곳).
+2. Dashboards → **Create dashboard ▾ → Import dashboard from file** 로 파일을 올립니다. 대시보드 이름은 파일 이름을 따릅니다.
+3. 위젯 6개(채널별 · 일별 · 계좌유형별 체결금액, 종목별 최근 종가, 월별 신규 계좌, 주문 데이터 품질)가 본인 테이블로 그려집니다.
+
+내보내기는 대시보드 ⋮ → File actions → **Export** (`.lvdash.json`), 기존 대시보드를 파일로 덮어쓰려면 같은 메뉴의 **Replace** 를 씁니다.
 
 ## 참고

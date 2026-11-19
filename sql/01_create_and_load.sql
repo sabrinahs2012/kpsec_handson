@@ -5,13 +5,13 @@
 --   CREATE SCHEMA IF NOT EXISTS kpsec.sandbox_edu COMMENT '데이터브릭스 교육용 가상 데이터 (실데이터 아님)';
 --   CREATE VOLUME IF NOT EXISTS kpsec.sandbox_edu.edu_raw COMMENT '교육용 CSV 원본';
 --
--- [교육생] 아래부터 실행. 에디터 위쪽 파라미터 칸 my_id 에 본인 ID 입력 (영문 소문자 · 숫자 · _, 예: rian_bow)
+-- [교육생] 아래부터 실행. 에디터 왼쪽 { } 아이콘(Parameters) 패널의 my_id 에 본인 ID 입력 (영문 소문자 · 숫자 · _, 예: rian_bow)
 --   → dim_stock_<my_id> 처럼 본인 이름이 붙은 테이블 7개가 만들어집니다.
 
 
 -- ------------------------------------------------------------ 01. 내 테이블 생성 + 적재
 SELECT assert_true(:my_id RLIKE '^[a-z][a-z0-9_]*$',
-                   'my_id 위젯(파라미터)에 본인 ID를 영문 소문자 · 숫자 · _ 로 입력하세요 (예: rian_bow)') AS id_ok,
+                   '왼쪽 { } 아이콘 → Parameters 패널 my_id 에 본인 ID를 영문 소문자 · 숫자 · _ 로 입력하세요 (예: rian_bow)') AS id_ok,
        :my_id AS my_id;
 USE kpsec.sandbox_edu;
 
