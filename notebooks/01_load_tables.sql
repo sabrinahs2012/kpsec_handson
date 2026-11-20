@@ -25,9 +25,7 @@ CREATE WIDGET TEXT my_id DEFAULT ''
 
 -- COMMAND ----------
 
-SELECT assert_true(:my_id RLIKE '^[a-z][a-z0-9_]*$',
-                   '왼쪽 { } 아이콘 → Parameters 패널 my_id 에 본인 ID를 영문 소문자 · 숫자 · _ 로 입력하세요 (예: rian_bow)') AS id_ok,
-       :my_id AS my_id
+SELECT  :my_id AS my_id
 
 -- COMMAND ----------
 
@@ -255,92 +253,6 @@ SELECT 'eis_ac_account', COUNT(*) FROM IDENTIFIER('eis_ac_account_' || :my_id) U
 SELECT 'eis_tr_order', COUNT(*) FROM IDENTIFIER('eis_tr_order_' || :my_id) UNION ALL
 SELECT 'app_event_log', COUNT(*) FROM IDENTIFIER('app_event_log_' || :my_id) UNION ALL
 SELECT 'daily_trade_kpi', COUNT(*) FROM IDENTIFIER('daily_trade_kpi_' || :my_id)
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC ## [보정] 앱 이벤트 주문 퍼널 데이터 추가 INSERT
--- MAGIC
--- MAGIC 처음 공유한 `app_event_log.csv` 에는 주문 시작(`order_start`) · 주문 완료(`order_done`) 이벤트가 없어서,
--- MAGIC 실습 [5] OS별 주문 전환율 계산에서 **0으로 나누는 문제** 가 생깁니다.
--- MAGIC 아래 INSERT 는 `kpsec.sandbox_edu.app_event_log` 의 주문 퍼널 이벤트(`order_start` 42건 · `order_done` 19건)를 그대로 옮긴 것입니다.
--- MAGIC
--- MAGIC - 이미 같은 `event_id` 가 있으면 넣지 않으므로 **어떤 CSV 버전이든, 여러 번 실행해도 안전**합니다.
--- MAGIC - 실행 후 기대값: `order_start` 42 · `order_done` 19 (현재 CSV 기준 전체 79행, 처음 공유한 10행 CSV였다면 71행)
-
--- COMMAND ----------
-
-INSERT INTO IDENTIFIER('app_event_log_' || :my_id)
-SELECT v.* FROM VALUES
-  ('E00000011', '20261029', TIMESTAMP '2026-10-29 10:31:01', '90000004', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900037"}'),
-  ('E00000012', '20261029', TIMESTAMP '2026-10-29 12:53:39', '90000007', 'order_start', '주문', '{"os": "Android", "app_ver": "5.1.0", "stock_cd": "X900000"}'),
-  ('E00000013', '20261030', TIMESTAMP '2026-10-30 10:41:33', '90000007', 'order_start', '주문', '{"os": "Android", "app_ver": "5.1.0", "stock_cd": "X900000"}'),
-  ('E00000014', '20261030', TIMESTAMP '2026-10-30 14:07:40', '90000004', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900000"}'),
-  ('E00000015', '20261030', TIMESTAMP '2026-10-30 14:10:09', '90000004', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900000"}'),
-  ('E00000016', '20261030', TIMESTAMP '2026-10-30 14:09:39', '90000003', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900074"}'),
-  ('E00000017', '20261030', TIMESTAMP '2026-10-30 14:10:40', '90000003', 'order_done', '주문완료', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900074"}'),
-  ('E00000018', '20261029', TIMESTAMP '2026-10-29 11:43:59', '90000002', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.1.0", "stock_cd": "X900148"}'),
-  ('E00000019', '20261030', TIMESTAMP '2026-10-30 15:09:14', '90000005', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900074"}'),
-  ('E00000020', '20261030', TIMESTAMP '2026-10-30 15:09:57', '90000005', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900074"}'),
-  ('E00000021', '20261030', TIMESTAMP '2026-10-30 15:09:21', '90000008', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900037"}'),
-  ('E00000022', '20261030', TIMESTAMP '2026-10-30 10:20:31', '90000009', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900037"}'),
-  ('E00000023', '20261030', TIMESTAMP '2026-10-30 10:38:36', '90000004', 'order_start', '주문', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000024', '20261029', TIMESTAMP '2026-10-29 12:20:12', '90000001', 'order_start', '주문', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900111"}'),
-  ('E00000025', '20261030', TIMESTAMP '2026-10-30 15:22:23', '90000003', 'order_start', '주문', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000026', '20261030', TIMESTAMP '2026-10-30 15:22:31', '90000003', 'order_done', '주문완료', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000027', '20261029', TIMESTAMP '2026-10-29 12:07:07', '90000007', 'order_start', '주문', '{"os": "Android", "app_ver": "5.1.0", "stock_cd": "X900074"}'),
-  ('E00000028', '20261030', TIMESTAMP '2026-10-30 13:54:51', '90000003', 'order_start', '주문', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000029', '20261030', TIMESTAMP '2026-10-30 09:01:18', '90000005', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.1.0", "stock_cd": "X900074"}'),
-  ('E00000030', '20261030', TIMESTAMP '2026-10-30 09:03:16', '90000005', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.1.0", "stock_cd": "X900074"}'),
-  ('E00000031', '20261030', TIMESTAMP '2026-10-30 11:02:51', '90000003', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.1.0", "stock_cd": "X900111"}'),
-  ('E00000032', '20261030', TIMESTAMP '2026-10-30 13:36:05', '90000008', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900074"}'),
-  ('E00000033', '20261030', TIMESTAMP '2026-10-30 13:37:43', '90000008', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900074"}'),
-  ('E00000034', '20261030', TIMESTAMP '2026-10-30 13:41:42', '90000006', 'order_start', '주문', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000035', '20261030', TIMESTAMP '2026-10-30 13:44:12', '90000006', 'order_done', '주문완료', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000036', '20261030', TIMESTAMP '2026-10-30 10:38:16', '90000005', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.1.0", "stock_cd": "X900000"}'),
-  ('E00000037', '20261030', TIMESTAMP '2026-10-30 10:38:49', '90000005', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.1.0", "stock_cd": "X900000"}'),
-  ('E00000038', '20261030', TIMESTAMP '2026-10-30 11:02:16', '90000001', 'order_start', '주문', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000039', '20261030', TIMESTAMP '2026-10-30 11:04:36', '90000001', 'order_done', '주문완료', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000041', '20261030', TIMESTAMP '2026-10-30 23:16:51', '90000013', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900037"}'),
-  ('E00000046', '20261030', TIMESTAMP '2026-10-30 23:20:16', '90000011', 'order_start', '주문', '{"os": "Android", "app_ver": "5.1.0", "stock_cd": "X900000"}'),
-  ('E00000050', '20261029', TIMESTAMP '2026-10-29 09:51:05', '90000020', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900074"}'),
-  ('E00000051', '20261030', TIMESTAMP '2026-10-30 10:04:03', '90000006', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900259"}'),
-  ('E00000052', '20261030', TIMESTAMP '2026-10-30 10:05:43', '90000006', 'order_done', '주문완료', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900259"}'),
-  ('E00000053', '20261030', TIMESTAMP '2026-10-30 14:25:20', '90000001', 'order_start', '주문', '{"os": "Android", "app_ver": "5.1.0", "stock_cd": "X900296"}'),
-  ('E00000054', '20261029', TIMESTAMP '2026-10-29 13:13:44', '90000010', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900037"}'),
-  ('E00000055', '20261029', TIMESTAMP '2026-10-29 12:31:42', '90000002', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900111"}'),
-  ('E00000056', '20261030', TIMESTAMP '2026-10-30 13:19:14', '90000020', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900259"}'),
-  ('E00000057', '20261030', TIMESTAMP '2026-10-30 11:07:19', '90000018', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900148"}'),
-  ('E00000058', '20261029', TIMESTAMP '2026-10-29 15:05:28', '90000020', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900111"}'),
-  ('E00000059', '20261029', TIMESTAMP '2026-10-29 15:07:29', '90000020', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900111"}'),
-  ('E00000060', '20261029', TIMESTAMP '2026-10-29 12:37:12', '90000016', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900296"}'),
-  ('E00000061', '20261029', TIMESTAMP '2026-10-29 12:38:21', '90000016', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900296"}'),
-  ('E00000062', '20261030', TIMESTAMP '2026-10-30 12:57:33', '90000015', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000063', '20261030', TIMESTAMP '2026-10-30 13:00:21', '90000015', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000064', '20261029', TIMESTAMP '2026-10-29 14:18:06', '90000011', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.2.0", "stock_cd": "X900111"}'),
-  ('E00000065', '20261030', TIMESTAMP '2026-10-30 11:39:26', '90000011', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900000"}'),
-  ('E00000066', '20261029', TIMESTAMP '2026-10-29 15:02:37', '90000005', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900074"}'),
-  ('E00000067', '20261029', TIMESTAMP '2026-10-29 15:05:03', '90000005', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900074"}'),
-  ('E00000068', '20261029', TIMESTAMP '2026-10-29 13:45:18', '90000014', 'order_start', '주문', '{"os": "Android", "app_ver": "5.1.0", "stock_cd": "X900148"}'),
-  ('E00000069', '20261029', TIMESTAMP '2026-10-29 13:47:57', '90000014', 'order_done', '주문완료', '{"os": "Android", "app_ver": "5.1.0", "stock_cd": "X900148"}'),
-  ('E00000070', '20261030', TIMESTAMP '2026-10-30 14:41:01', '90000003', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000071', '20261030', TIMESTAMP '2026-10-30 14:43:34', '90000003', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000072', '20261030', TIMESTAMP '2026-10-30 13:20:24', '90000008', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.1.0", "stock_cd": "X900037"}'),
-  ('E00000073', '20261030', TIMESTAMP '2026-10-30 13:20:30', '90000008', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.1.0", "stock_cd": "X900037"}'),
-  ('E00000074', '20261029', TIMESTAMP '2026-10-29 10:05:07', '90000013', 'order_start', '주문', '{"os": "Android", "app_ver": "5.1.0", "stock_cd": "X900111"}'),
-  ('E00000075', '20261029', TIMESTAMP '2026-10-29 11:11:08', '90000010', 'order_start', '주문', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900037"}'),
-  ('E00000076', '20261029', TIMESTAMP '2026-10-29 11:13:12', '90000010', 'order_done', '주문완료', '{"os": "Android", "app_ver": "5.3.1", "stock_cd": "X900037"}'),
-  ('E00000077', '20261030', TIMESTAMP '2026-10-30 12:34:05', '90000004', 'order_start', '주문', '{"os": "Android", "app_ver": "5.2.0", "stock_cd": "X900074"}'),
-  ('E00000078', '20261029', TIMESTAMP '2026-10-29 14:51:29', '90000018', 'order_start', '주문', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900000"}'),
-  ('E00000079', '20261029', TIMESTAMP '2026-10-29 14:53:35', '90000018', 'order_done', '주문완료', '{"os": "iOS", "app_ver": "5.3.1", "stock_cd": "X900000"}')
-AS v(event_id, base_date, event_ts, cust_no, event_name, screen, props_json)
-WHERE v.event_id NOT IN (SELECT event_id FROM IDENTIFIER('app_event_log_' || :my_id))
-
--- COMMAND ----------
-
-SELECT event_name, COUNT(*) AS cnt
-FROM IDENTIFIER('app_event_log_' || :my_id)
-GROUP BY 1 ORDER BY 2 DESC
 
 -- COMMAND ----------
 
