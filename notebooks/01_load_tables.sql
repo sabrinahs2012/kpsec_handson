@@ -6,9 +6,11 @@
 -- MAGIC
 -- MAGIC **`my_id` 설정 (처음 한 번)**
 -- MAGIC
--- MAGIC 1. **Run all** 을 누릅니다. 첫 셀 `CREATE WIDGET` 이 입력 칸 `my_id` 를 만들고("Parameter created" 알림), ID가 비어 있으므로 **검사 셀에서 멈춥니다** (정상).
+-- MAGIC 1. 첫 셀 `CREATE WIDGET` **만 먼저 실행**합니다 (셀 선택 후 Shift+Enter). 입력 칸 `my_id` 가 생깁니다("Parameter created" 알림).
 -- MAGIC 2. 노트북 **왼쪽 세로 메뉴의 `{ }` 아이콘(Parameters)** 을 눌러 패널을 열고, `my_id` 칸에 본인 ID를 입력합니다. (영문 소문자 · 숫자 · `_` 만, 예: `rian_bow`)
--- MAGIC 3. 다시 **Run all** — 공유 폴더의 CSV 파일이 있는지 확인한 뒤, CSV를 읽어 `dim_stock_<my_id>` 처럼 **본인 이름이 붙은 테이블 7개** 를 만들고, 검증 쿼리 · **앱 이벤트 보정 INSERT** 까지 실행합니다.
+-- MAGIC 3. **Run all** — 공유 폴더의 CSV 파일이 있는지 확인한 뒤, CSV를 읽어 `dim_stock_<my_id>` 처럼 **본인 이름이 붙은 테이블 7개** 를 만들고 검증 쿼리까지 실행합니다.
+-- MAGIC
+-- MAGIC > ID를 넣지 않고 Run all 하면 `dim_stock_` 처럼 이름 끝이 빈 테이블이 만들어집니다. 반드시 ID를 먼저 입력하세요.
 -- MAGIC
 -- MAGIC - 테이블 이름은 `IDENTIFIER('dim_stock_' || :my_id)` 형태로 위젯 값을 붙여 만듭니다.
 -- MAGIC - 사내 관례: `base_date` = STRING `yyyymmdd`, 원장성 테이블은 `eis_` 접두사, 코멘트 = `BIGDATA(DBX)_<소스>_<업무>_<한글명>`
@@ -21,7 +23,7 @@ CREATE WIDGET TEXT my_id DEFAULT ''
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ID가 비어 있거나 형식이 맞지 않으면 여기서 멈춥니다. 왼쪽 `{ }` 아이콘 → Parameters 패널의 `my_id` 에 ID를 넣고 다시 **Run all** 하세요.
+-- MAGIC 입력한 `my_id` 를 확인합니다. 비어 있으면 왼쪽 `{ }` 아이콘 → Parameters 패널의 `my_id` 에 ID를 넣고 다시 **Run all** 하세요.
 
 -- COMMAND ----------
 
@@ -54,7 +56,7 @@ ORDER BY 1
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC 6개가 모두 없으면 여기서 멈춥니다. 강사에게 공유 폴더 상태(Git folder Pull 여부)와 읽기 권한을 확인해 달라고 하세요.
+-- MAGIC 6개가 모두 없으면 여기서 멈춥니다. 강사에게 공유 폴더 `data` 에 CSV 6개가 있는지와 읽기 권한을 확인해 달라고 하세요.
 
 -- COMMAND ----------
 
@@ -242,7 +244,7 @@ FROM o GROUP BY base_date
 -- MAGIC ## 검증 — 행수 확인
 -- MAGIC
 -- MAGIC 기대값: `dim_stock` 10 · `stock_price_daily` 20 · `dim_customer` 20 · `eis_ac_account` 22 · `eis_tr_order` 22 · `daily_trade_kpi` 2(영업일 수)
--- MAGIC · `app_event_log` 79 (처음 공유한 CSV라면 10 → 아래 보정 INSERT 후 71)
+-- MAGIC · `app_event_log` 79
 
 -- COMMAND ----------
 

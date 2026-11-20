@@ -2,7 +2,7 @@
 -- MAGIC %md
 -- MAGIC # 02. 실습 문제
 -- MAGIC
--- MAGIC 품질점검 → 조인 → 윈도우 → JSON → 코호트 → 마스킹뷰 → 타임트래블 순서로 난이도가 올라갑니다.
+-- MAGIC 품질점검 → 조인 → 윈도우 → JSON → 코호트 → 마스킹뷰 순서로 난이도가 올라갑니다.
 -- MAGIC
 -- MAGIC - 사전 조건: `01_load_tables` 실행 완료 (본인 테이블 7개)
 -- MAGIC - 왼쪽 `{ }` 아이콘(Parameters) 패널의 **`my_id`** 에 `01_load_tables` 와 **같은 ID** 를 입력하세요. (칸이 없으면 Run all 한 번 → 검사 셀에서 멈춘 뒤 입력) 모든 쿼리가 `IDENTIFIER('<테이블>_' || :my_id)` 로 본인 테이블을 읽습니다.
@@ -84,7 +84,7 @@ ORDER BY stock_cd, base_date LIMIT 50
 -- MAGIC
 -- MAGIC 기대값: Android `starts` 23 · `dones` 7 · `conv` 0.304 / iOS `starts` 19 · `dones` 12 · `conv` 0.632
 -- MAGIC
--- MAGIC `starts` 가 0 이면(`01_load_tables` 의 보정 INSERT 를 건너뛴 경우) `try_divide` 가 오류 대신 NULL 을 돌려줍니다.
+-- MAGIC `try_divide` 는 `starts` 가 0 이면 오류 대신 NULL 을 돌려줍니다.
 
 -- COMMAND ----------
 
