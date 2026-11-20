@@ -64,7 +64,6 @@
 - 교육생 권한: `USE CATALOG kpsec`, `USE SCHEMA` · `CREATE TABLE` (스키마 `sandbox_edu`), 공유 폴더 `/Workspace/Shared/kpsec_handson` 읽기(Can Read 이상). SQL Editor 로 실행할 때만 `READ VOLUME` (볼륨 `edu_raw`).
 - 노트북은 `read_files('file:/Workspace/Shared/kpsec_handson/data/<파일>.csv', …)` 로 읽습니다. 강의 중에는 공유 폴더에서 Pull 하거나 파일을 바꾸지 마세요 (읽는 도중 파일이 바뀌면 그 순간 실행한 사람만 오류가 날 수 있음).
 - `01_load_tables` 는 `CREATE OR REPLACE` 라 재실행해도 안전하고, 보정 INSERT 는 이미 있는 `event_id` 는 건너뜁니다.
-- 실습 [9] 는 본인 주문 테이블의 복사본 `eis_tr_order_tt_<my_id>` 로 시연합니다. `VERSION AS OF` · `RESTORE` · `DESCRIBE HISTORY` 는 `IDENTIFIER()` 를 받지 않아 `EXECUTE IMMEDIATE` 로 실행합니다.
 
 ### 노트북 없이 (SQL Editor) 실행할 때
 
